@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viewer</title>
+
+  <!-- Google AdSense Auto Ads -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7955484448966179"
+     crossorigin="anonymous"></script>
+
   <style>
     :root {
       --bg: #111;
@@ -97,15 +102,6 @@
       margin-bottom: 1rem;
     }
 
-    #dropZone {
-      border: 2px dashed var(--text);
-      padding: 1rem;
-      text-align: center;
-      margin: 1rem 0;
-      border-radius: 10px;
-      color: var(--text);
-    }
-
     @media (max-width: 600px) {
       .video-card {
         flex-direction: column;
@@ -128,13 +124,11 @@
     <input type="text" id="youtubeUrl" placeholder="Paste YouTube URL here..." />
     <button onclick="uploadVideo()">Upload Video</button>
 
-    <div id="dropZone">📥 Drag & Drop a YouTube URL here</div>
+    <input type="text" id="search" placeholder="Search videos by title or description..." oninput="filterVideos()" />
 
-    <input type="text" id="search" placeholder="Search videos..." oninput="filterVideos()" />
-    <button onclick="playRandomYouTube()">🎲 Random YouTube Video</button>
-
-    <div id="videoList"><h2>📺 Videos</h2></div>
-    <button id="loadMoreBtn" onclick="loadMore()">⬇️ Load More</button>
+    <div id="videoList">
+      <h2>📺 Videos </h2>
+    </div>
   </div>
 
   <script>
@@ -143,8 +137,6 @@
     const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
     let allVideos = [];
-    let currentIndex = 0;
-    const pageSize = 5;
 
     function extractVideoId(url) {
       const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -156,9 +148,11 @@
     }
 
     async function fetchVideos() {
-      const res = await fetch(API_URL, { headers: { "X-Master-Key": API_KEY } });
+      const res = await fetch(API_URL, {
+        headers: { "X-Master-Key": API_KEY }
+      });
       const data = await res.json();
-      return data.record || [];
+      return data.record;
     }
 
     async function saveVideos(list) {
@@ -172,15 +166,15 @@
       });
     }
 
-    async function uploadVideo(url = null) {
+    async function uploadVideo() {
       const input = document.getElementById("youtubeUrl");
-      const link = url || input.value.trim();
-      const id = extractVideoId(link);
+      const url = input.value.trim();
+      const id = extractVideoId(url);
       if (!id) return alert("Invalid YouTube URL");
 
       let videos = await fetchVideos();
-      if (!videos.includes(link)) {
-        videos.unshift(link);
+      if (!videos.includes(url)) {
+        videos.unshift(url);
         await saveVideos(videos);
         await loadAndRenderVideos();
       }
@@ -217,13 +211,12 @@
         allVideos.push({ id, url, ...meta });
       }
 
-      currentIndex = 0;
-      renderVideos(allVideos.slice(0, pageSize));
+      renderVideos(allVideos);
     }
 
-    function renderVideos(videos, append = false) {
+    function renderVideos(videos) {
       const container = document.getElementById("videoList");
-      if (!append) container.innerHTML = "<h2>📺 Videos</h2>";
+      container.innerHTML = "<h2>📺 Videos</h2>";
 
       videos.forEach(video => {
         const div = document.createElement("div");
@@ -233,21 +226,11 @@
           <div class="video-info">
             <h3>${video.title}</h3>
             <p>${video.description}</p>
-            <iframe src="https://inv.nadeko.net/embed/${video.id}" frameborder="0" allowfullscreen 
-              style="width:100%;height:240px;margin-top:0.5rem;border-radius:0.5rem;">
-            </iframe>
+            <iframe src="https://inv.nadeko.net/embed/${video.id}" frameborder="0" allowfullscreen style="width:100%;height:240px;margin-top:0.5rem;border-radius:0.5rem;"></iframe>
           </div>
         `;
         container.appendChild(div);
       });
-    }
-
-    function loadMore() {
-      const next = allVideos.slice(currentIndex + pageSize, currentIndex + 2 * pageSize);
-      if (next.length > 0) {
-        currentIndex += pageSize;
-        renderVideos(next, true);
-      }
     }
 
     function filterVideos() {
@@ -256,35 +239,8 @@
         v.title.toLowerCase().includes(search) ||
         v.description.toLowerCase().includes(search)
       );
-      currentIndex = 0;
-      renderVideos(filtered.slice(0, pageSize));
+      renderVideos(filtered);
     }
-
-    function playRandomYouTube() {
-      const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
-      let randomId = "";
-      for (let i = 0; i < 11; i++) {
-        randomId += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      window.open(`https://www.youtube.com/watch?v=${randomId}`, "_blank");
-    }
-
-    const dropZone = document.getElementById("dropZone");
-    dropZone.addEventListener("dragover", e => {
-      e.preventDefault();
-      dropZone.style.background = "rgba(255,255,255,0.1)";
-    });
-
-    dropZone.addEventListener("dragleave", () => {
-      dropZone.style.background = "none";
-    });
-
-    dropZone.addEventListener("drop", e => {
-      e.preventDefault();
-      dropZone.style.background = "none";
-      const text = e.dataTransfer.getData("text/plain");
-      uploadVideo(text);
-    });
 
     loadAndRenderVideos();
   </script>
