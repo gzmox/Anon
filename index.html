@@ -4,11 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viewer</title>
-
-  <!-- Google AdSense Auto Ads -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7955484448966179"
-     crossorigin="anonymous"></script>
-
   <style>
     :root {
       --bg: #111;
@@ -112,6 +107,40 @@
         width: 100%;
       }
     }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #323232;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.5s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    /* Back to Top Button */
+    #backToTop {
+      position: fixed;
+      bottom: 40px;
+      left: 30px;
+      background: #28a745;
+      color: white;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: none;
+      z-index: 1000;
+    }
+
   </style>
 </head>
 <body>
@@ -131,6 +160,12 @@
     </div>
   </div>
 
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Back to Top Button -->
+  <button id="backToTop" onclick="scrollToTop()">↑ Top</button>
+
   <script>
     const BIN_ID = "684194ea8a456b7966a9ced1";
     const API_KEY = "$2a$10$f2z0PYYxfzeZrSzazT56I.ZoVOA0Puemv9KpqA/MbZMd7yz28gqnm";
@@ -145,6 +180,13 @@
 
     function toggleMode() {
       document.body.classList.toggle("light");
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.innerText = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
     }
 
     async function fetchVideos() {
@@ -170,13 +212,16 @@
       const input = document.getElementById("youtubeUrl");
       const url = input.value.trim();
       const id = extractVideoId(url);
-      if (!id) return alert("Invalid YouTube URL");
+      if (!id) return showToast("❌ Invalid YouTube URL");
 
       let videos = await fetchVideos();
       if (!videos.includes(url)) {
         videos.unshift(url);
         await saveVideos(videos);
         await loadAndRenderVideos();
+        showToast("✅ Video uploaded");
+      } else {
+        showToast("⚠️ Video already exists");
       }
 
       input.value = "";
@@ -241,6 +286,19 @@
       );
       renderVideos(filtered);
     }
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.addEventListener("scroll", () => {
+      const btn = document.getElementById("backToTop");
+      if (window.scrollY > 300) {
+        btn.style.display = "block";
+      } else {
+        btn.style.display = "none";
+      }
+    });
 
     loadAndRenderVideos();
   </script>
