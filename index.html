@@ -131,7 +131,7 @@
     <div id="dropZone">📥 Drag & Drop a YouTube URL here</div>
 
     <input type="text" id="search" placeholder="Search videos..." oninput="filterVideos()" />
-    <button onclick="playRandomVideo()">🎲 Play Random</button>
+    <button onclick="playRandomYouTube()">🎲 Random YouTube Video</button>
 
     <div id="videoList"><h2>📺 Videos</h2></div>
     <button id="loadMoreBtn" onclick="loadMore()">⬇️ Load More</button>
@@ -214,8 +214,7 @@
         const id = extractVideoId(url);
         if (!id) continue;
         const meta = await getMeta(id);
-        const views = parseInt(localStorage.getItem(id) || "0", 10);
-        allVideos.push({ id, url, views, ...meta });
+        allVideos.push({ id, url, ...meta });
       }
 
       currentIndex = 0;
@@ -234,10 +233,8 @@
           <div class="video-info">
             <h3>${video.title}</h3>
             <p>${video.description}</p>
-            <p>👁️ Views: ${video.views}</p>
             <iframe src="https://inv.nadeko.net/embed/${video.id}" frameborder="0" allowfullscreen 
-              style="width:100%;height:240px;margin-top:0.5rem;border-radius:0.5rem;"
-              onload="incrementViews('${video.id}')">
+              style="width:100%;height:240px;margin-top:0.5rem;border-radius:0.5rem;">
             </iframe>
           </div>
         `;
@@ -253,11 +250,6 @@
       }
     }
 
-    function incrementViews(id) {
-      const views = parseInt(localStorage.getItem(id) || "0", 10) + 1;
-      localStorage.setItem(id, views);
-    }
-
     function filterVideos() {
       const search = document.getElementById("search").value.toLowerCase();
       const filtered = allVideos.filter(v =>
@@ -268,10 +260,13 @@
       renderVideos(filtered.slice(0, pageSize));
     }
 
-    function playRandomVideo() {
-      if (allVideos.length === 0) return;
-      const random = allVideos[Math.floor(Math.random() * allVideos.length)];
-      window.open(`https://youtube.com/watch?v=${random.id}`, "_blank");
+    function playRandomYouTube() {
+      const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
+      let randomId = "";
+      for (let i = 0; i < 11; i++) {
+        randomId += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      window.open(`https://www.youtube.com/watch?v=${randomId}`, "_blank");
     }
 
     const dropZone = document.getElementById("dropZone");
