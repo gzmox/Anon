@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <h1>✅ Welcome to the Admin Panel!</h1>
+  <button onclick="logout()">Logout</button>
+
+  <script>
+    if (localStorage.getItem("auth") !== "true") {
+      window.location.href = "index.html";
+    }
+
+    function logout() {
+      localStorage.removeItem("auth");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
