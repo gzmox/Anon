@@ -4,20 +4,130 @@
   <meta charset="UTF-8" />
   <title>Admin Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: system-ui, sans-serif;
+      padding: 2rem;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+    }
+
+    .video-item {
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    iframe {
+      border-radius: 8px;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.5);
+    }
+
+    button {
+      padding: 0.7rem 1.2rem;
+      border: none;
+      background: #dc3545;
+      color: white;
+      font-weight: bold;
+      border-radius: 6px;
+      margin-top: 1rem;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <h1>✅ Welcome to the Admin Panel!</h1>
-  <button onclick="logout()">Logout</button>
+  <h1>🛠️ Admin Panel</h1>
+
+  <div id="videoList">Loading videos...</div>
+
+  <button onclick="deleteSelected()">🗑️ Delete Selected</button>
 
   <script>
     if (localStorage.getItem("auth") !== "true") {
       window.location.href = "index.html";
     }
 
-    function logout() {
-      localStorage.removeItem("auth");
-      window.location.href = "index.html";
+    const BIN_ID = "684194ea8a456b7966a9ced1";
+    const API_KEY = "$2a$10$f2z0PYYxfzeZrSzazT56I.ZoVOA0Puemv9KpqA/MbZMd7yz28gqnm";
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+    let allVideos = [];
+
+    function extractVideoId(url) {
+      const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      return match ? match[1] : null;
     }
+
+    async function fetchVideos() {
+      const res = await fetch(API_URL, {
+        headers: { "X-Master-Key": API_KEY }
+      });
+      const data = await res.json();
+      return data.record || [];
+    }
+
+    async function saveVideos(updatedList) {
+      return fetch(API_URL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": API_KEY
+        },
+        body: JSON.stringify(updatedList)
+      });
+    }
+
+    async function loadVideos() {
+      allVideos = await fetchVideos();
+      const container = document.getElementById("videoList");
+      container.innerHTML = "";
+
+      allVideos.forEach((url, index) => {
+        const videoId = extractVideoId(url);
+        if (!videoId) return;
+
+        const div = document.createElement("div");
+        div.className = "video-item";
+        div.innerHTML = `
+          <input type="checkbox" data-index="${index}" />
+          <iframe width="200" height="120" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
+          <span>${url}</span>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function deleteSelected() {
+      const checkboxes = document.querySelectorAll("input[type='checkbox']:checked");
+      const indexesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.getAttribute("data-index")));
+
+      if (indexesToDelete.length === 0) {
+        alert("No videos selected.");
+        return;
+      }
+
+      const confirmed = confirm("Are you sure you want to delete the selected videos?");
+      if (!confirmed) return;
+
+      const newList = allVideos.filter((_, i) => !indexesToDelete.includes(i));
+
+      await saveVideos(newList);
+      alert("✅ Deleted successfully!");
+      loadVideos();
+    }
+
+    loadVideos();
   </script>
 </body>
 </html>
