@@ -97,6 +97,15 @@
       margin-bottom: 1rem;
     }
 
+    #dropZone {
+      border: 2px dashed var(--text);
+      padding: 1rem;
+      text-align: center;
+      margin: 1rem 0;
+      border-radius: 10px;
+      color: var(--text);
+    }
+
     @media (max-width: 600px) {
       .video-card {
         flex-direction: column;
@@ -119,11 +128,13 @@
     <input type="text" id="youtubeUrl" placeholder="Paste YouTube URL here..." />
     <button onclick="uploadVideo()">Upload Video</button>
 
-    <input type="text" id="search" placeholder="Search videos by title or description..." oninput="filterVideos()" />
+    <div id="dropZone">📥 Drag & Drop a YouTube URL here</div>
 
-    <div id="videoList">
-      <h2>📺 Videos </h2>
-    </div>
+    <input type="text" id="search" placeholder="Search videos..." oninput="filterVideos()" />
+    <button onclick="playRandomVideo()">🎲 Play Random</button>
+
+    <div id="videoList"><h2>📺 Videos</h2></div>
+    <button id="loadMoreBtn" onclick="loadMore()">⬇️ Load More</button>
   </div>
 
   <script>
@@ -132,6 +143,8 @@
     const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
     let allVideos = [];
+    let currentIndex = 0;
+    const pageSize = 5;
 
     function extractVideoId(url) {
       const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -143,11 +156,9 @@
     }
 
     async function fetchVideos() {
-      const res = await fetch(API_URL, {
-        headers: { "X-Master-Key": API_KEY }
-      });
+      const res = await fetch(API_URL, { headers: { "X-Master-Key": API_KEY } });
       const data = await res.json();
-      return data.record;
+      return data.record || [];
     }
 
     async function saveVideos(list) {
@@ -161,15 +172,15 @@
       });
     }
 
-    async function uploadVideo() {
+    async function uploadVideo(url = null) {
       const input = document.getElementById("youtubeUrl");
-      const url = input.value.trim();
-      const id = extractVideoId(url);
+      const link = url || input.value.trim();
+      const id = extractVideoId(link);
       if (!id) return alert("Invalid YouTube URL");
 
       let videos = await fetchVideos();
-      if (!videos.includes(url)) {
-        videos.unshift(url);
+      if (!videos.includes(link)) {
+        videos.unshift(link);
         await saveVideos(videos);
         await loadAndRenderVideos();
       }
@@ -203,15 +214,17 @@
         const id = extractVideoId(url);
         if (!id) continue;
         const meta = await getMeta(id);
-        allVideos.push({ id, url, ...meta });
+        const views = parseInt(localStorage.getItem(id) || "0", 10);
+        allVideos.push({ id, url, views, ...meta });
       }
 
-      renderVideos(allVideos);
+      currentIndex = 0;
+      renderVideos(allVideos.slice(0, pageSize));
     }
 
-    function renderVideos(videos) {
+    function renderVideos(videos, append = false) {
       const container = document.getElementById("videoList");
-      container.innerHTML = "<h2>📺 Videos</h2>";
+      if (!append) container.innerHTML = "<h2>📺 Videos</h2>";
 
       videos.forEach(video => {
         const div = document.createElement("div");
@@ -221,11 +234,28 @@
           <div class="video-info">
             <h3>${video.title}</h3>
             <p>${video.description}</p>
-            <iframe src="https://inv.nadeko.net/embed/${video.id}" frameborder="0" allowfullscreen style="width:100%;height:240px;margin-top:0.5rem;border-radius:0.5rem;"></iframe>
+            <p>👁️ Views: ${video.views}</p>
+            <iframe src="https://inv.nadeko.net/embed/${video.id}" frameborder="0" allowfullscreen 
+              style="width:100%;height:240px;margin-top:0.5rem;border-radius:0.5rem;"
+              onload="incrementViews('${video.id}')">
+            </iframe>
           </div>
         `;
         container.appendChild(div);
       });
+    }
+
+    function loadMore() {
+      const next = allVideos.slice(currentIndex + pageSize, currentIndex + 2 * pageSize);
+      if (next.length > 0) {
+        currentIndex += pageSize;
+        renderVideos(next, true);
+      }
+    }
+
+    function incrementViews(id) {
+      const views = parseInt(localStorage.getItem(id) || "0", 10) + 1;
+      localStorage.setItem(id, views);
     }
 
     function filterVideos() {
@@ -234,8 +264,32 @@
         v.title.toLowerCase().includes(search) ||
         v.description.toLowerCase().includes(search)
       );
-      renderVideos(filtered);
+      currentIndex = 0;
+      renderVideos(filtered.slice(0, pageSize));
     }
+
+    function playRandomVideo() {
+      if (allVideos.length === 0) return;
+      const random = allVideos[Math.floor(Math.random() * allVideos.length)];
+      window.open(`https://youtube.com/watch?v=${random.id}`, "_blank");
+    }
+
+    const dropZone = document.getElementById("dropZone");
+    dropZone.addEventListener("dragover", e => {
+      e.preventDefault();
+      dropZone.style.background = "rgba(255,255,255,0.1)";
+    });
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.style.background = "none";
+    });
+
+    dropZone.addEventListener("drop", e => {
+      e.preventDefault();
+      dropZone.style.background = "none";
+      const text = e.dataTransfer.getData("text/plain");
+      uploadVideo(text);
+    });
 
     loadAndRenderVideos();
   </script>
