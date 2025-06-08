@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings</title>
+  <style>
+    :root {
+      --bg: #111;
+      --text: #fff;
+      --card: #1e1e1e;
+    }
+
+    body.light {
+      --bg: #f9f9f9;
+      --text: #111;
+      --card: #fff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background-size: cover;
+      background-position: center;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+    }
+
+    .settings-container {
+      max-width: 600px;
+      margin: auto;
+      background: var(--card);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+    }
+
+    input[type="file"], button {
+      display: block;
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      margin-top: 1rem;
+      background: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+
+    .toggle-mode {
+      background: none;
+      border: 2px solid var(--text);
+      color: var(--text);
+      margin-top: 1rem;
+    }
+
+    .back-button {
+      margin-top: 2rem;
+      text-align: center;
+      display: inline-block;
+      text-decoration: none;
+      background: none;
+      color: var(--text);
+      border: 2px solid var(--text);
+      padding: 0.6rem 1rem;
+      border-radius: 10px;
+      transition: background 0.3s;
+    }
+
+    .back-button:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.4rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <h1>⚙️ Settings</h1>
+
+    <label for="bgImage">Background Image</label>
+    <input type="file" id="bgImage" accept="image/*" />
+
+    <button class="toggle-mode" onclick="toggleMode()">🌓 Toggle Theme</button>
+
+    <a href="/" class="back-button">← Back to Home</a>
+  </div>
+
+  <script>
+    // Load saved background image
+    const savedImage = localStorage.getItem("bgImage");
+    if (savedImage) {
+      document.body.style.backgroundImage = `url(${savedImage})`;
+    }
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light") {
+      document.body.classList.add("light");
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle("light");
+      const newTheme = document.body.classList.contains("light") ? "light" : "dark";
+      localStorage.setItem("theme", newTheme);
+    }
+
+    // Handle background image upload
+    document.getElementById("bgImage").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const imgData = reader.result;
+        document.body.style.backgroundImage = `url(${imgData})`;
+        localStorage.setItem("bgImage", imgData);
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>
