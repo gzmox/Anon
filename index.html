@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viewer</title>
 
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7955484448966179"
-    crossorigin="anonymous"></script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7955484448966179" crossorigin="anonymous"></script>
 
   <style>
     :root {
@@ -53,7 +52,7 @@
       background: #28a745;
       color: white;
       cursor: pointer;
-      margin-bottom: 1rem;
+      margin-bottom: 2rem;
     }
 
     .header {
@@ -134,10 +133,9 @@
       z-index: 1000;
     }
 
-    .toggle-mode {
+    .toggle-mode,
+    .floating-button {
       position: fixed;
-      bottom: 30px;
-      right: 30px;
       width: 50px;
       height: 50px;
       border-radius: 50%;
@@ -152,15 +150,24 @@
       justify-content: center;
     }
 
-    #settings {
-      background: var(--card);
-      padding: 1rem;
-      border-radius: 8px;
-      margin-top: 2rem;
+    .toggle-mode {
+      bottom: 30px;
+      right: 30px;
     }
 
-    #settings h2 {
-      margin-top: 0;
+    .floating-button {
+      bottom: 90px;
+      right: 30px;
+      text-decoration: none;
+      text-align: center;
+      line-height: 50px;
+    }
+
+    #visitorCount {
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      color: var(--text);
+      text-align: right;
     }
   </style>
 </head>
@@ -178,18 +185,18 @@
     <div id="videoList">
       <h2>📺 Videos</h2>
     </div>
-
-    <div id="settings">
-      <h2>⚙️ Settings</h2>
-      <label for="bgImageInput">Background Image URL:</label>
-      <input type="text" id="bgImageInput" placeholder="Enter image URL..." />
-      <button onclick="setBackgroundImage()">Set Background</button>
-      <button onclick="clearBackgroundImage()">Clear Background</button>
-    </div>
   </div>
 
-  <button class="toggle-mode" onclick="toggleMode()">🌓</button>
+  <!-- Settings Button -->
+  <a href="https://anonzx.netlify.app/settings" class="floating-button" title="Settings">⚙️</a>
+
+  <!-- Dark/Light Toggle Button -->
+  <button class="toggle-mode" onclick="toggleMode()" title="Toggle Light/Dark">🌓</button>
+
+  <!-- Toast Notification -->
   <div id="toast" class="toast"></div>
+
+  <!-- Back to Top Button -->
   <button id="backToTop" onclick="scrollToTop()">↑ Top</button>
 
   <script>
@@ -321,34 +328,7 @@
       btn.style.display = window.scrollY > 300 ? "block" : "none";
     });
 
-    // Custom background functions
-    function setBackgroundImage() {
-      const url = document.getElementById("bgImageInput").value.trim();
-      if (url) {
-        document.body.style.backgroundImage = `url('${url}')`;
-        document.body.style.backgroundSize = "cover";
-        localStorage.setItem("customBg", url);
-        showToast("✅ Background set");
-      }
-    }
-
-    function clearBackgroundImage() {
-      document.body.style.backgroundImage = "";
-      localStorage.removeItem("customBg");
-      showToast("🧹 Background cleared");
-    }
-
-    function loadBackgroundFromLocalStorage() {
-      const url = localStorage.getItem("customBg");
-      if (url) {
-        document.body.style.backgroundImage = `url('${url}')`;
-        document.body.style.backgroundSize = "cover";
-      }
-    }
-
-    // Init
     loadAndRenderVideos();
-    loadBackgroundFromLocalStorage();
   </script>
 </body>
 </html>
