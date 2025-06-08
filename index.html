@@ -326,6 +326,21 @@
       btn.style.display = window.scrollY > 300 ? "block" : "none";
     });
 
+    // Apply saved background image
+    const savedBg = localStorage.getItem("bgImage");
+    if (savedBg) {
+      document.body.style.backgroundImage = `url(${savedBg})`;
+      document.body.style.backgroundSize = "cover";
+      document.body.style.backgroundPosition = "center";
+    }
+
+// Apply saved theme
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme === "light") {
+  document.body.classList.add("light");
+}
+
+
     loadAndRenderVideos();
   </script>
 </body>
