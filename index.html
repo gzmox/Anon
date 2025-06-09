@@ -27,7 +27,7 @@
     }
 
     .container {
-      max-width: 700px;
+      max-width: 1200px;
       margin: auto;
     }
 
@@ -58,45 +58,55 @@
       align-items: center;
     }
 
-    .video-card {
-      background: var(--card);
-      border-radius: 10px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      display: flex;
-      gap: 1rem;
-      flex-direction: row;
-      align-items: center;
-      transition: background 0.3s;
-    }
-
-    .video-card img {
-      width: 120px;
-      border-radius: 8px;
-    }
-
-    .video-info {
-      flex-grow: 1;
-    }
-
-    .video-info h3 {
-      margin: 0;
-      font-size: 1.1rem;
-    }
-
     #search {
       margin-bottom: 1rem;
     }
 
-    @media (max-width: 600px) {
-      .video-card {
-        flex-direction: column;
-        align-items: start;
-      }
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
 
-      .video-card img {
-        width: 100%;
-      }
+    .video-card {
+      background: var(--card);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s ease;
+    }
+
+    .video-card:hover {
+      transform: scale(1.02);
+    }
+
+    .thumbnail {
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+    }
+
+    .video-info {
+      padding: 0.8rem;
+    }
+
+    .video-info h3 {
+      font-size: 1rem;
+      margin: 0 0 0.4rem;
+      font-weight: bold;
+    }
+
+    .video-info p {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      margin: 0.3rem 0;
+    }
+
+    iframe {
+      width: 100%;
+      height: 240px;
+      border-radius: 0.5rem;
+      margin-top: 0.5rem;
     }
 
     .toast {
@@ -152,13 +162,6 @@
       gap: 10px;
       z-index: 1001;
     }
-
-    #visitorCount {
-      margin-top: 1rem;
-      font-size: 0.95rem;
-      color: var(--text);
-      text-align: right;
-    }
   </style>
 </head>
 <body>
@@ -174,10 +177,11 @@
 
     <div id="videoList">
       <h2>📺 Videos</h2>
+      <div class="video-grid" id="videoGrid"></div>
     </div>
   </div>
 
-  <!-- Floating Button Group (bottom-right) -->
+  <!-- Floating Buttons -->
   <div class="floating-btn-group">
     <a href="/settings.html" class="toggle-mode" title="Settings">⚙️</a>
     <button class="toggle-mode" onclick="toggleMode()" title="Toggle Light/Dark">🌓</button>
@@ -283,21 +287,21 @@
     }
 
     function renderVideos(videos) {
-      const container = document.getElementById("videoList");
-      container.innerHTML = "<h2>📺 Videos</h2>";
+      const container = document.getElementById("videoGrid");
+      container.innerHTML = "";
 
       videos.forEach(video => {
-        const div = document.createElement("div");
-        div.className = "video-card";
-        div.innerHTML = `
-          <img src="${video.thumbnail}" alt="${video.title}">
+        const card = document.createElement("div");
+        card.className = "video-card";
+        card.innerHTML = `
+          <img class="thumbnail" src="${video.thumbnail}" alt="${video.title}">
           <div class="video-info">
             <h3>${video.title}</h3>
             <p>${video.description}</p>
-            <iframe src="https://inv.nadeko.net/embed/${video.id}" frameborder="0" allowfullscreen style="width:100%;height:240px;margin-top:0.5rem;border-radius:0.5rem;"></iframe>
+            <iframe src="https://inv.nadeko.net/embed/${video.id}" frameborder="0" allowfullscreen></iframe>
           </div>
         `;
-        container.appendChild(div);
+        container.appendChild(card);
       });
     }
 
@@ -319,7 +323,7 @@
       btn.style.display = window.scrollY > 300 ? "block" : "none";
     });
 
-    // Apply saved background image
+    // Background image
     const savedBg = localStorage.getItem("bgImage");
     if (savedBg) {
       document.body.style.backgroundImage = `url(${savedBg})`;
@@ -327,7 +331,7 @@
       document.body.style.backgroundPosition = "center";
     }
 
-    // Apply saved theme
+    // Theme
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") {
       document.body.classList.add("light");
