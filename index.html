@@ -80,12 +80,6 @@
       transform: scale(1.02);
     }
 
-    .thumbnail {
-      width: 100%;
-      height: 170px;
-      object-fit: cover;
-    }
-
     .video-info {
       padding: 0.8rem;
     }
@@ -120,6 +114,7 @@
       opacity: 0;
       transition: opacity 0.5s;
       z-index: 1000;
+      cursor: pointer;
     }
 
     .toast.show {
@@ -162,12 +157,28 @@
       gap: 10px;
       z-index: 1001;
     }
+
+    .my-uploads-btn {
+      background: #007bff;
+      color: white;
+      padding: 0.8rem 1.2rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-left: 1rem;
+    }
+
+    .load-more-container {
+      text-align: center;
+      margin-top: 2rem;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1>♔ AnonZx</h1>
+      <a href="/my-uploads.html" class="my-uploads-btn">My Uploads</a>
     </div>
 
     <input type="text" id="youtubeUrl" placeholder="Paste YouTube URL here..." />
@@ -178,19 +189,18 @@
     <div id="videoList">
       <h2>📺 Videos</h2>
       <div class="video-grid" id="videoGrid"></div>
+      <div class="load-more-container">
+        <button id="loadMoreBtn" onclick="loadMoreVideos()">Load More</button>
+      </div>
     </div>
   </div>
 
-  <!-- Floating Buttons -->
   <div class="floating-btn-group">
     <a href="/settings.html" class="toggle-mode" title="Settings">⚙️</a>
     <button class="toggle-mode" onclick="toggleMode()" title="Toggle Light/Dark">🌓</button>
   </div>
 
-  <!-- Toast Notification -->
   <div id="toast" class="toast"></div>
-
-  <!-- Back to Top Button -->
   <button id="backToTop" onclick="scrollToTop()">↑ Top</button>
 
   <script>
@@ -198,6 +208,7 @@
     const API_KEY = "$2a$10$f2z0PYYxfzeZrSzazT56I.ZoVOA0Puemv9KpqA/MbZMd7yz28gqnm";
     const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
     let allVideos = [];
+    let displayCount = 15;
 
     function extractVideoId(url) {
       const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -209,11 +220,22 @@
       localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
     }
 
-    function showToast(message) {
+    function showToast(message, scrollToId = null) {
       const toast = document.getElementById("toast");
       toast.innerText = message;
       toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), 3000);
+
+      if (scrollToId) {
+        toast.onclick = () => {
+          const el = document.querySelector(scrollToId);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        };
+      }
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+        toast.onclick = null;
+      }, 3000);
     }
 
     async function fetchVideos() {
@@ -246,7 +268,7 @@
         videos.unshift(url);
         await saveVideos(videos);
         await loadAndRenderVideos();
-        showToast("✅ Video uploaded");
+        showToast("✅ Video uploaded", `#video-${id}`);
       } else {
         showToast("⚠️ Video already exists");
       }
@@ -283,16 +305,19 @@
         allVideos.push({ id, url, ...meta });
       }
 
+      displayCount = 15;
       renderVideos(allVideos);
     }
 
-    function renderVideos(videos) {
+    function renderVideos(videos, reset = true) {
       const container = document.getElementById("videoGrid");
-      container.innerHTML = "";
+      if (reset) container.innerHTML = "";
 
-      videos.forEach(video => {
+      const toDisplay = videos.slice(0, displayCount);
+      toDisplay.forEach(video => {
         const card = document.createElement("div");
         card.className = "video-card";
+        card.id = `video-${video.id}`;
         card.innerHTML = `
           <div class="video-info">
             <h3>${video.title}</h3>
@@ -302,6 +327,14 @@
         `;
         container.appendChild(card);
       });
+
+      const btn = document.getElementById("loadMoreBtn");
+      btn.style.display = displayCount >= videos.length ? "none" : "block";
+    }
+
+    function loadMoreVideos() {
+      displayCount += 15;
+      renderVideos(allVideos);
     }
 
     function filterVideos() {
@@ -310,6 +343,7 @@
         v.title.toLowerCase().includes(search) ||
         v.description.toLowerCase().includes(search)
       );
+      displayCount = filtered.length;
       renderVideos(filtered);
     }
 
@@ -319,10 +353,10 @@
 
     window.addEventListener("scroll", () => {
       const btn = document.getElementById("backToTop");
-      btn.style.display = window.scrollY > 300 ? "block" : "none";
+      const atBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 10;
+      btn.style.display = atBottom ? "block" : "none";
     });
 
-    // Background image
     const savedBg = localStorage.getItem("bgImage");
     if (savedBg) {
       document.body.style.backgroundImage = `url(${savedBg})`;
@@ -330,7 +364,6 @@
       document.body.style.backgroundPosition = "center";
     }
 
-    // Theme
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") {
       document.body.classList.add("light");
