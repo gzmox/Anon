@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viewer</title>
-
   <style>
     :root {
       --bg: #111;
@@ -131,9 +130,7 @@
       z-index: 1000;
     }
 
-    .toggle-mode,
-    .floating-button {
-      position: fixed;
+    .toggle-mode {
       width: 50px;
       height: 50px;
       border-radius: 50%;
@@ -142,23 +139,18 @@
       color: var(--text);
       font-size: 1.2rem;
       cursor: pointer;
-      z-index: 1001;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .toggle-mode {
+    .floating-btn-group {
+      position: fixed;
       bottom: 30px;
       right: 30px;
-    }
-
-    .floating-button {
-      bottom: 90px;
-      right: 30px;
-      text-decoration: none;
-      text-align: center;
-      line-height: 50px;
+      display: flex;
+      gap: 10px;
+      z-index: 1001;
     }
 
     #visitorCount {
@@ -185,17 +177,17 @@
     </div>
   </div>
 
-<!-- Settings Button (left side) -->
-<a href="/settings.html" class="toggle-mode" title="Settings" style="position: fixed; bottom: 90px; left: 30px; z-index: 1001;">⚙️</a>
+  <!-- Floating Button Group (bottom-right) -->
+  <div class="floating-btn-group">
+    <a href="/settings.html" class="toggle-mode" title="Settings">⚙️</a>
+    <button class="toggle-mode" onclick="toggleMode()" title="Toggle Light/Dark">🌓</button>
+  </div>
 
-<!-- Dark/Light Toggle Button (right side) -->
-<button class="toggle-mode" onclick="toggleMode()" title="Toggle Light/Dark" style="position: fixed; bottom: 30px; right: 30px; z-index: 1001;">🌓</button>
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
 
-<!-- Toast Notification -->
-<div id="toast" class="toast"></div>
-
-<!-- Back to Top Button -->
-<button id="backToTop" onclick="scrollToTop()">↑ Top</button>
+  <!-- Back to Top Button -->
+  <button id="backToTop" onclick="scrollToTop()">↑ Top</button>
 
   <script>
     const BIN_ID = "684194ea8a456b7966a9ced1";
@@ -210,6 +202,7 @@
 
     function toggleMode() {
       document.body.classList.toggle("light");
+      localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
     }
 
     function showToast(message) {
@@ -334,12 +327,11 @@
       document.body.style.backgroundPosition = "center";
     }
 
-// Apply saved theme
-const savedTheme = localStorage.getItem("theme");
-if (savedTheme === "light") {
-  document.body.classList.add("light");
-}
-
+    // Apply saved theme
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light") {
+      document.body.classList.add("light");
+    }
 
     loadAndRenderVideos();
   </script>
