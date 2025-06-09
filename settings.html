@@ -61,6 +61,11 @@
       margin-top: 1rem;
     }
 
+    .reset-bg {
+      background: #dc3545;
+      margin-top: 1rem;
+    }
+
     .back-button {
       margin-top: 2rem;
       text-align: center;
@@ -92,6 +97,8 @@
     <label for="bgImage">Background Image</label>
     <input type="file" id="bgImage" accept="image/*" />
 
+    <button class="reset-bg" onclick="resetBackground()">🧹 Reset Background</button>
+
     <button class="toggle-mode" onclick="toggleMode()">🌓 Toggle Theme</button>
 
     <a href="/" class="back-button">← Back to Home</a>
@@ -114,6 +121,11 @@
       document.body.classList.toggle("light");
       const newTheme = document.body.classList.contains("light") ? "light" : "dark";
       localStorage.setItem("theme", newTheme);
+    }
+
+    function resetBackground() {
+      localStorage.removeItem("bgImage");
+      document.body.style.backgroundImage = "none";
     }
 
     // Handle background image upload
