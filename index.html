@@ -272,6 +272,11 @@
       } else {
         showToast("⚠️ Video already exists");
       }
+      let uploads = JSON.parse(localStorage.getItem("myUploads") || "[]");
+      if (!uploads.includes(id)) {
+        uploads.push(id);
+        localStorage.setItem("myUploads", JSON.stringify(uploads));
+      }
 
       input.value = "";
     }
