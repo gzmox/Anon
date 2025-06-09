@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Uploads</title>
+  <style>
+    :root {
+      --bg: #111;
+      --text: #fff;
+      --card: #1e1e1e;
+    }
+
+    body.light {
+      --bg: #f9f9f9;
+      --text: #111;
+      --card: #fff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      margin: 0;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .video-card {
+      background: var(--card);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .video-info {
+      padding: 0.8rem;
+    }
+
+    .video-info h3 {
+      font-size: 1rem;
+      margin: 0 0 0.4rem;
+      font-weight: bold;
+    }
+
+    iframe {
+      width: 100%;
+      height: 240px;
+      border-radius: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .back-btn {
+      background: #28a745;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .toggle-mode {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid var(--text);
+      background: none;
+      color: var(--text);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📂 My Uploads</h1>
+      <div>
+        <a class="back-btn" href="index.html">← Home</a>
+        <button class="toggle-mode" onclick="toggleMode()" title="Toggle Light/Dark">🌓</button>
+      </div>
+    </div>
+
+    <div class="video-grid" id="videoGrid">
+      <!-- Videos will be injected here -->
+    </div>
+  </div>
+
+  <script>
+    const BIN_ID = "684194ea8a456b7966a9ced1";
+    const API_KEY = "$2a$10$f2z0PYYxfzeZrSzazT56I.ZoVOA0Puemv9KpqA/MbZMd7yz28gqnm";
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    let allVideos = [];
+
+    function extractVideoId(url) {
+      const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      return match ? match[1] : null;
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle("light");
+      localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+    }
+
+    async function getMeta(videoId) {
+      try {
+        const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+        const data = await res.json();
+        return {
+          title: data.title || "Unknown Title",
+          thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+        };
+      } catch {
+        return {
+          title: "Unknown Title",
+          thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+        };
+      }
+    }
+
+    async function loadMyUploads() {
+      const uploadedIds = JSON.parse(localStorage.getItem("myUploads") || "[]");
+      if (uploadedIds.length === 0) {
+        document.getElementById("videoGrid").innerHTML = "<p>No uploads found.</p>";
+        return;
+      }
+
+      const res = await fetch(API_URL, {
+        headers: { "X-Master-Key": API_KEY }
+      });
+
+      const data = await res.json();
+      const urls = data.record;
+
+      for (const url of urls) {
+        const id = extractVideoId(url);
+        if (!id || !uploadedIds.includes(id)) continue;
+        const meta = await getMeta(id);
+        allVideos.push({ id, url, ...meta });
+      }
+
+      renderVideos();
+    }
+
+    function renderVideos() {
+      const container = document.getElementById("videoGrid");
+      container.innerHTML = "";
+
+      allVideos.forEach(video => {
+        const card = document.createElement("div");
+        card.className = "video-card";
+        card.innerHTML = `
+          <div class="video-info">
+            <h3>${video.title}</h3>
+            <iframe src="https://inv.nadeko.net/embed/${video.id}" frameborder="0" allowfullscreen></iframe>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light") {
+      document.body.classList.add("light");
+    }
+
+    loadMyUploads();
+  </script>
+</body>
+</html>
