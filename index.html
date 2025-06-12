@@ -402,7 +402,260 @@
       document.body.style.backgroundImage = `url(${savedBg})`;
       document.body.style.backgroundSize = "cover";
       document.body.style.backgroundPosition = "center";
-    }
+    }<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Inkrement</title>
+    <link rel="icon" href="icon.png" type="image/png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class"
+      };
+    </script>
+    <style>
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #888;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white transition-colors duration-300">
+
+    <!-- Loader -->
+    <div id="loader" class="fixed inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900 z-50">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500"></div>
+    </div>
+
+    <main class="max-w-6xl mx-auto p-6 space-y-8">
+      <!-- Header -->
+      <header class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold">♔ AnonZx</h1>
+        <a href="/my-uploads.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition">
+          My Uploads
+        </a>
+      </header>
+
+      <!-- Upload Form -->
+      <section class="space-y-4">
+        <input id="youtubeUrl" type="text" placeholder="Paste YouTube URL here..." class="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 placeholder-gray-500" />
+        <button onclick="uploadVideo()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium">
+          Upload Video
+        </button>
+      </section>
+
+      <!-- Search -->
+      <input type="text" id="search" placeholder="Search videos by title or description..." oninput="filterVideos()" class="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 placeholder-gray-500" />
+
+      <!-- Video Grid -->
+      <section id="videoList" class="space-y-4">
+        <h2 class="text-xl font-semibold">📺 Videos</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="videoGrid"></div>
+        <div class="text-center">
+          <button id="loadMoreBtn" onclick="loadMoreVideos()" class="bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded-lg transition hidden">
+            Load More
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Floating Buttons -->
+    <div class="fixed bottom-6 right-6 flex flex-col items-end space-y-2 z-50">
+      <a href="/settings.html" title="Settings" class="w-12 h-12 rounded-full bg-gray-800 text-white flex items-center justify-center text-xl hover:bg-gray-700">
+        ⚙️
+      </a>
+      <button onclick="toggleMode()" title="Toggle Light/Dark" class="w-12 h-12 rounded-full bg-gray-800 text-white flex items-center justify-center text-xl hover:bg-gray-700">
+        🌓
+      </button>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-3 rounded-lg opacity-0 transition duration-300 z-50 cursor-pointer"></div>
+
+    <!-- Back to Top -->
+    <button id="backToTop" onclick="scrollToTop()" class="fixed bottom-6 left-6 bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-sm rounded-lg hidden z-50">
+      ↑ Top
+    </button>
+
+    <!-- JavaScript -->
+    <script>
+      const BIN_ID = "684194ea8a456b7966a9ced1";
+      const API_KEY = "$2a$10$f2z0PYYxfzeZrSzazT56I.ZoVOA0Puemv9KpqA/MbZMd7yz28gqnm";
+      const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+      let allVideos = [];
+      let displayCount = 15;
+
+      function extractVideoId(url) {
+        const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        return match ? match[1] : null;
+      }
+
+      function toggleMode() {
+        document.body.classList.toggle("dark");
+        localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+      }
+
+      function showToast(message, scrollToId = null) {
+        const toast = document.getElementById("toast");
+        toast.innerText = message;
+        toast.classList.add("opacity-100");
+
+        if (scrollToId) {
+          toast.onclick = () => {
+            const el = document.querySelector(scrollToId);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          };
+        }
+
+        setTimeout(() => {
+          toast.classList.remove("opacity-100");
+          toast.onclick = null;
+        }, 3000);
+      }
+
+      async function fetchVideos() {
+        const res = await fetch(API_URL, {
+          headers: { "X-Master-Key": API_KEY }
+        });
+        const data = await res.json();
+        return data.record;
+      }
+
+      async function saveVideos(list) {
+        await fetch(API_URL, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": API_KEY
+          },
+          body: JSON.stringify(list)
+        });
+      }
+
+      async function uploadVideo() {
+        const input = document.getElementById("youtubeUrl");
+        const url = input.value.trim();
+        const id = extractVideoId(url);
+        if (!id) return showToast("❌ Invalid YouTube URL");
+
+        let videos = await fetchVideos();
+        if (!videos.includes(url)) {
+          videos.unshift(url);
+          await saveVideos(videos);
+          await loadAndRenderVideos();
+          showToast("✅ Video uploaded", `#video-${id}`);
+        } else {
+          showToast("⚠️ Video already exists");
+        }
+
+        let uploads = JSON.parse(localStorage.getItem("myUploads") || "[]");
+        if (!uploads.includes(id)) {
+          uploads.push(id);
+          localStorage.setItem("myUploads", JSON.stringify(uploads));
+        }
+
+        input.value = "";
+      }
+
+      async function getMeta(videoId) {
+        try {
+          const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+          const data = await res.json();
+          return {
+            title: data.title || "Unknown Title",
+            description: data.description || "",
+            thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+          };
+        } catch {
+          return {
+            title: "Unknown Title",
+            description: "",
+            thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+          };
+        }
+      }
+
+      async function loadAndRenderVideos() {
+        document.getElementById("loader").style.display = "flex";
+        const urls = await fetchVideos();
+        allVideos = [];
+
+        for (const url of urls) {
+          const id = extractVideoId(url);
+          if (!id) continue;
+          const meta = await getMeta(id);
+          allVideos.push({ id, url, ...meta });
+        }
+
+        displayCount = 15;
+        renderVideos(allVideos);
+        document.getElementById("loader").style.display = "none";
+      }
+
+      function renderVideos(videos, reset = true) {
+        const container = document.getElementById("videoGrid");
+        if (reset) container.innerHTML = "";
+
+        const toDisplay = videos.slice(0, displayCount);
+        toDisplay.forEach(video => {
+          const card = document.createElement("div");
+          card.className = "bg-white dark:bg-gray-800 rounded-xl shadow hover:shadow-lg transition p-4";
+          card.id = `video-${video.id}`;
+          card.innerHTML = `
+            <a href="video.html?id=${video.id}" class="block text-gray-900 dark:text-white">
+              <img src="${video.thumbnail}" alt="${video.title}" class="rounded-lg mb-2 w-full">
+              <h3 class="font-semibold text-lg">${video.title}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">${video.description}</p>
+            </a>
+          `;
+          container.appendChild(card);
+        });
+
+        const btn = document.getElementById("loadMoreBtn");
+        btn.classList.toggle("hidden", displayCount >= videos.length);
+      }
+
+      function loadMoreVideos() {
+        displayCount += 15;
+        renderVideos(allVideos);
+      }
+
+      function filterVideos() {
+        const search = document.getElementById("search").value.toLowerCase();
+        const filtered = allVideos.filter(v =>
+          v.title.toLowerCase().includes(search) ||
+          v.description.toLowerCase().includes(search)
+        );
+        displayCount = filtered.length;
+        renderVideos(filtered);
+      }
+
+      function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      window.addEventListener("scroll", () => {
+        const btn = document.getElementById("backToTop");
+        const atBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 10;
+        btn.classList.toggle("hidden", !atBottom);
+      });
+
+      // Apply saved theme
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+      }
+
+      loadAndRenderVideos();
+    </script>
+  </body>
+</html>
+
 
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") {
