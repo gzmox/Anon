@@ -11,11 +11,9 @@
       font-family: system-ui, sans-serif;
       padding: 2rem;
     }
-
     h1 {
       margin-bottom: 1rem;
     }
-
     .video-item {
       background: #1e1e1e;
       border-radius: 8px;
@@ -25,16 +23,13 @@
       align-items: center;
       gap: 1rem;
     }
-
     iframe {
       border-radius: 8px;
     }
-
     input[type="checkbox"] {
       transform: scale(1.5);
     }
-
-    input[type="text"] {
+    input[type="text"], input[type="file"] {
       width: 100%;
       padding: 0.7rem;
       margin-bottom: 1rem;
@@ -42,7 +37,6 @@
       border-radius: 6px;
       font-size: 1rem;
     }
-
     button {
       padding: 0.7rem 1.2rem;
       border: none;
@@ -50,19 +44,34 @@
       color: white;
       font-weight: bold;
       border-radius: 6px;
-      margin-top: 1rem;
+      margin: 0.3rem 0.3rem 1rem 0;
       cursor: pointer;
+    }
+    #stats {
+      background: #222;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
     }
   </style>
 </head>
 <body>
   <h1>🛠️ Admin Panel</h1>
 
+  <div id="stats">
+    <strong>Total Videos:</strong> <span id="totalVideos">0</span><br>
+    <strong>Last Video Added:</strong> <span id="lastVideoDate">N/A</span>
+  </div>
+
   <input type="text" id="search" placeholder="🔍 Search videos..." />
 
   <div id="videoList">Loading videos...</div>
 
   <button onclick="deleteSelected()">🗑️ Delete Selected</button>
+  <button onclick="undoDelete()">↩️ Undo Delete</button>
+  <button onclick="exportList()">📤 Export List</button>
+  <input type="file" id="importInput" accept=".json" onchange="importList()" />
+  <button onclick="validateAll()">🔍 Validate URLs</button>
 
   <script>
     if (localStorage.getItem("auth") !== "true") {
@@ -74,6 +83,7 @@
     const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
     let allVideos = [];
+    let lastDeleted = [];
 
     function extractVideoId(url) {
       const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -81,9 +91,7 @@
     }
 
     async function fetchVideos() {
-      const res = await fetch(API_URL, {
-        headers: { "X-Master-Key": API_KEY }
-      });
+      const res = await fetch(API_URL, { headers: { "X-Master-Key": API_KEY } });
       const data = await res.json();
       return data.record || [];
     }
@@ -99,6 +107,11 @@
       });
     }
 
+    function updateStats() {
+      document.getElementById("totalVideos").textContent = allVideos.length;
+      document.getElementById("lastVideoDate").textContent = new Date().toLocaleString();
+    }
+
     async function loadVideos(filter = "") {
       allVideos = await fetchVideos();
       const container = document.getElementById("videoList");
@@ -106,7 +119,6 @@
 
       allVideos.forEach((url, index) => {
         if (!url.toLowerCase().includes(filter.toLowerCase())) return;
-
         const videoId = extractVideoId(url);
         if (!videoId) return;
 
@@ -119,6 +131,8 @@
         `;
         container.appendChild(div);
       });
+
+      updateStats();
     }
 
     async function deleteSelected() {
@@ -133,6 +147,7 @@
       const confirmed = confirm("Are you sure you want to delete the selected videos?");
       if (!confirmed) return;
 
+      lastDeleted = indexesToDelete.map(i => allVideos[i]);
       const newList = allVideos.filter((_, i) => !indexesToDelete.includes(i));
 
       await saveVideos(newList);
@@ -140,11 +155,63 @@
       loadVideos();
     }
 
+    async function undoDelete() {
+      if (lastDeleted.length === 0) {
+        alert("Nothing to undo.");
+        return;
+      }
+
+      allVideos.push(...lastDeleted);
+      await saveVideos(allVideos);
+      alert("↩️ Undo successful!");
+      lastDeleted = [];
+      loadVideos();
+    }
+
+    function exportList() {
+      const blob = new Blob([JSON.stringify(allVideos, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "videos.json";
+      link.click();
+    }
+
+    function importList() {
+      const file = document.getElementById("importInput").files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          if (!Array.isArray(imported)) throw new Error("Invalid format");
+
+          const confirmed = confirm("Replace existing list?");
+          allVideos = confirmed ? imported : [...allVideos, ...imported];
+
+          await saveVideos(allVideos);
+          alert("✅ Import successful!");
+          loadVideos();
+        } catch {
+          alert("❌ Failed to import list.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function validateAll() {
+      const invalid = allVideos.filter(url => !extractVideoId(url));
+      if (invalid.length > 0) {
+        alert(`❌ ${invalid.length} invalid video(s):\n` + invalid.join("\n"));
+      } else {
+        alert("✅ All video URLs are valid.");
+      }
+    }
+
     document.getElementById("search").addEventListener("input", e => {
       loadVideos(e.target.value);
     });
 
-    // 🔍 Pressing "/" focuses the search input
     document.addEventListener("keydown", (e) => {
       if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
         e.preventDefault();
