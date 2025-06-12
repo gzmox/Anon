@@ -141,6 +141,23 @@
       const file = e.target.files[0];
       if (!file) return;
 
+
+      window.addEventListener("DOMContentLoaded", () => {
+    const savedMethod = localStorage.getItem("renderMethod") || "inv";
+    const select = document.getElementById("renderMethod");
+
+    if (select) {
+      select.value = savedMethod;
+    }
+  });
+
+  // Save method to localStorage
+  function saveRenderMethod() {
+    const method = document.getElementById("renderMethod").value;
+    localStorage.setItem("renderMethod", method);
+    alert("✅ Video rendering method saved!");
+  }
+      
       const reader = new FileReader();
       reader.onload = () => {
         const imgData = reader.result;
