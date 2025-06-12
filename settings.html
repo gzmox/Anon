@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Settings</title>
+  <link rel="icon" href="unhid.png" type="image/png">
   <style>
     :root {
       --bg: #111;
@@ -61,7 +62,8 @@
       color: white;
     }
 
-    .toggle-mode {
+    .toggle-mode,
+    .toggle-hidden {
       background: none;
       border: 2px solid var(--text);
       color: var(--text);
@@ -109,6 +111,9 @@
     <!-- Theme toggle -->
     <button class="toggle-mode" onclick="toggleMode()">🌓 Toggle Theme</button>
 
+    <!-- Hidden mode toggle -->
+    <button class="toggle-hidden" onclick="toggleHiddenMode()">🎭 Toggle Hidden Mode</button>
+
     <!-- Render method -->
     <label for="renderMethod">Video Rendering Method</label>
     <select id="renderMethod">
@@ -122,29 +127,23 @@
   </div>
 
   <script>
-    // Background image
+    // Apply saved background
     const savedImage = localStorage.getItem("bgImage");
     if (savedImage) {
       document.body.style.backgroundImage = `url(${savedImage})`;
     }
 
-    // Theme
+    // Apply saved theme
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") {
       document.body.classList.add("light");
     }
 
-    function toggleMode() {
-      document.body.classList.toggle("light");
-      const newTheme = document.body.classList.contains("light") ? "light" : "dark";
-      localStorage.setItem("theme", newTheme);
-    }
+    // Apply saved hidden mode
+    const hiddenMode = localStorage.getItem("hiddenMode") === "true";
+    applyHiddenMode(hiddenMode);
 
-    function resetBackground() {
-      localStorage.removeItem("bgImage");
-      document.body.style.backgroundImage = "none";
-    }
-
+    // Background functions
     document.getElementById("bgImage").addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -158,18 +157,49 @@
       reader.readAsDataURL(file);
     });
 
-    // Render method
-    window.addEventListener("DOMContentLoaded", () => {
-      const savedMethod = localStorage.getItem("renderMethod") || "inv";
-      const select = document.getElementById("renderMethod");
-      if (select) select.value = savedMethod;
-    });
+    function resetBackground() {
+      localStorage.removeItem("bgImage");
+      document.body.style.backgroundImage = "none";
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle("light");
+      const newTheme = document.body.classList.contains("light") ? "light" : "dark";
+      localStorage.setItem("theme", newTheme);
+    }
+
+    function toggleHiddenMode() {
+      const currentlyHidden = localStorage.getItem("hiddenMode") === "true";
+      const newHidden = !currentlyHidden;
+      localStorage.setItem("hiddenMode", newHidden.toString());
+      applyHiddenMode(newHidden);
+    }
+
+    function applyHiddenMode(hidden) {
+      document.title = hidden ? "Campus Inkrement" : "Anon ZX";
+
+      const link = document.querySelector("link[rel='icon']");
+      if (link) link.remove();
+
+      const newFavicon = document.createElement("link");
+      newFavicon.rel = "icon";
+      newFavicon.type = "image/png";
+      newFavicon.href = hidden ? "icon.png" : "unhid.png";
+      document.head.appendChild(newFavicon);
+    }
 
     function saveRenderMethod() {
       const method = document.getElementById("renderMethod").value;
       localStorage.setItem("renderMethod", method);
       alert("✅ Video rendering method saved!");
     }
+
+    // Set render method dropdown on load
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedMethod = localStorage.getItem("renderMethod") || "inv";
+      const select = document.getElementById("renderMethod");
+      if (select) select.value = savedMethod;
+    });
   </script>
 </body>
 </html>
