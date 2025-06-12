@@ -121,21 +121,20 @@
       opacity: 1;
     }
 
-#backToTop {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  background: #800000;
-  color: white;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.85rem;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  display: none;
-  z-index: 1000;
-}
-
+    #backToTop {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #800000;
+      color: white;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      display: none;
+      z-index: 1000;
+    }
 
     .toggle-mode {
       width: 50px;
@@ -174,9 +173,37 @@
       text-align: center;
       margin-top: 2rem;
     }
+
+    /* Loading Spinner */
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid #666;
+      border-top: 6px solid var(--text);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 </head>
 <body>
+  <div id="loader"><div class="spinner"></div></div>
+
   <div class="container">
     <div class="header">
       <h1>♔ AnonZx</h1>
@@ -274,6 +301,7 @@
       } else {
         showToast("⚠️ Video already exists");
       }
+
       let uploads = JSON.parse(localStorage.getItem("myUploads") || "[]");
       if (!uploads.includes(id)) {
         uploads.push(id);
@@ -302,6 +330,7 @@
     }
 
     async function loadAndRenderVideos() {
+      document.getElementById("loader").style.display = "flex";
       const urls = await fetchVideos();
       allVideos = [];
 
@@ -314,33 +343,33 @@
 
       displayCount = 15;
       renderVideos(allVideos);
+      document.getElementById("loader").style.display = "none";
     }
 
-function renderVideos(videos, reset = true) {
-  const container = document.getElementById("videoGrid");
-  if (reset) container.innerHTML = "";
+    function renderVideos(videos, reset = true) {
+      const container = document.getElementById("videoGrid");
+      if (reset) container.innerHTML = "";
 
-  const toDisplay = videos.slice(0, displayCount);
-  toDisplay.forEach(video => {
-    const card = document.createElement("div");
-    card.className = "video-card";
-    card.id = `video-${video.id}`;
-    card.innerHTML = `
-      <a href="video.html?id=${video.id}" style="text-decoration: none; color: inherit;">
-        <div class="video-info">
-          <h3>${video.title}</h3>
-          <p>${video.description}</p>
-          <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" style="width:100%; border-radius: 8px; margin-top: 0.5rem;">
-        </div>
-      </a>
-    `;
-    container.appendChild(card);
-  });
+      const toDisplay = videos.slice(0, displayCount);
+      toDisplay.forEach(video => {
+        const card = document.createElement("div");
+        card.className = "video-card";
+        card.id = `video-${video.id}`;
+        card.innerHTML = `
+          <a href="/v/${video.id}" style="text-decoration: none; color: inherit;">
+            <div class="video-info">
+              <h3>${video.title}</h3>
+              <p>${video.description}</p>
+              <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" style="width:100%; border-radius: 8px; margin-top: 0.5rem;">
+            </div>
+          </a>
+        `;
+        container.appendChild(card);
+      });
 
-  const btn = document.getElementById("loadMoreBtn");
-  btn.style.display = displayCount >= videos.length ? "none" : "block";
-}
-
+      const btn = document.getElementById("loadMoreBtn");
+      btn.style.display = displayCount >= videos.length ? "none" : "block";
+    }
 
     function loadMoreVideos() {
       displayCount += 15;
