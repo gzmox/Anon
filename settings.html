@@ -41,7 +41,9 @@
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
     }
 
-    input[type="file"], button {
+    input[type="file"],
+    button,
+    select {
       display: block;
       width: 100%;
       padding: 0.8rem;
@@ -52,6 +54,11 @@
       background: #28a745;
       color: white;
       cursor: pointer;
+    }
+
+    select {
+      background: #333;
+      color: white;
     }
 
     .toggle-mode {
@@ -85,7 +92,7 @@
 
     label {
       display: block;
-      margin-top: 1rem;
+      margin-top: 1.5rem;
       margin-bottom: 0.4rem;
     }
   </style>
@@ -94,32 +101,34 @@
   <div class="settings-container">
     <h1>⚙️ Settings</h1>
 
+    <!-- Background image -->
     <label for="bgImage">Background Image</label>
     <input type="file" id="bgImage" accept="image/*" />
-
     <button class="reset-bg" onclick="resetBackground()">🧹 Reset Background</button>
 
+    <!-- Theme toggle -->
     <button class="toggle-mode" onclick="toggleMode()">🌓 Toggle Theme</button>
 
+    <!-- Render method -->
+    <label for="renderMethod">Video Rendering Method</label>
+    <select id="renderMethod">
+      <option value="inv">Invidious (nadeko)</option>
+      <option value="yt">YouTube Embed</option>
+    </select>
+    <button onclick="saveRenderMethod()">💾 Save Render Method</button>
+
+    <!-- Back link -->
     <a href="/" class="back-button">← Back to Home</a>
   </div>
 
-<label for="renderMethod">Video Rendering Method</label>
-<select id="renderMethod">
-  <option value="inv">Invidious (nadeko)</option>
-  <option value="yt">YouTube Embed</option>
-</select>
-<button onclick="saveRenderMethod()">💾 Save Render Method</button>
-
-  
   <script>
-    // Load saved background image
+    // Background image
     const savedImage = localStorage.getItem("bgImage");
     if (savedImage) {
       document.body.style.backgroundImage = `url(${savedImage})`;
     }
 
-    // Load saved theme
+    // Theme
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") {
       document.body.classList.add("light");
@@ -136,28 +145,10 @@
       document.body.style.backgroundImage = "none";
     }
 
-    // Handle background image upload
     document.getElementById("bgImage").addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
-
-      window.addEventListener("DOMContentLoaded", () => {
-    const savedMethod = localStorage.getItem("renderMethod") || "inv";
-    const select = document.getElementById("renderMethod");
-
-    if (select) {
-      select.value = savedMethod;
-    }
-  });
-
-  // Save method to localStorage
-  function saveRenderMethod() {
-    const method = document.getElementById("renderMethod").value;
-    localStorage.setItem("renderMethod", method);
-    alert("✅ Video rendering method saved!");
-  }
-      
       const reader = new FileReader();
       reader.onload = () => {
         const imgData = reader.result;
@@ -166,6 +157,19 @@
       };
       reader.readAsDataURL(file);
     });
+
+    // Render method
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedMethod = localStorage.getItem("renderMethod") || "inv";
+      const select = document.getElementById("renderMethod");
+      if (select) select.value = savedMethod;
+    });
+
+    function saveRenderMethod() {
+      const method = document.getElementById("renderMethod").value;
+      localStorage.setItem("renderMethod", method);
+      alert("✅ Video rendering method saved!");
+    }
   </script>
 </body>
 </html>
