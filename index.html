@@ -175,7 +175,6 @@
       margin-top: 2rem;
     }
 
-    /* Loading Spinner */
     #loader {
       position: fixed;
       inset: 0;
@@ -273,7 +272,7 @@
         headers: { "X-Master-Key": API_KEY }
       });
       const data = await res.json();
-      return data.record;
+      return data.record || [];
     }
 
     async function saveVideos(list) {
@@ -355,16 +354,15 @@
       toDisplay.forEach(video => {
         const card = document.createElement("div");
         card.className = "video-card";
-        card.id = video-${video.id};
-        card.innerHTML = 
+        card.id = `video-${video.id}`;
+        card.innerHTML = `
           <a href="video.html?id=${video.id}" style="text-decoration: none; color: inherit;">
             <div class="video-info">
               <h3>${video.title}</h3>
               <p>${video.description}</p>
               <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" style="width:100%; border-radius: 8px; margin-top: 0.5rem;">
             </div>
-          </a>
-        ;
+          </a>`;
         container.appendChild(card);
       });
 
@@ -399,7 +397,7 @@
 
     const savedBg = localStorage.getItem("bgImage");
     if (savedBg) {
-      document.body.style.backgroundImage = url(${savedBg});
+      document.body.style.backgroundImage = `url("${savedBg}")`;
       document.body.style.backgroundSize = "cover";
       document.body.style.backgroundPosition = "center";
     }
