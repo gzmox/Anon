@@ -104,6 +104,14 @@
     <a href="/" class="back-button">← Back to Home</a>
   </div>
 
+<label for="renderMethod">Video Rendering Method</label>
+<select id="renderMethod">
+  <option value="inv">Invidious (nadeko)</option>
+  <option value="yt">YouTube Embed</option>
+</select>
+<button onclick="saveRenderMethod()">💾 Save Render Method</button>
+
+  
   <script>
     // Load saved background image
     const savedImage = localStorage.getItem("bgImage");
