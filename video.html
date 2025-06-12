@@ -6,47 +6,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Watch Video</title>
   <style>
+    :root {
+      --bg: #111;
+      --text: #f9f9f9;
+      --accent: #28a745;
+      --card: #1e1e1e;
+    }
+
     body {
       margin: 0;
       padding: 2rem;
       font-family: system-ui, sans-serif;
-      background: #111;
-      color: #fff;
+      background: var(--bg);
+      color: var(--text);
     }
 
     .container {
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
+      background: var(--card);
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     }
 
     iframe {
       width: 100%;
-      height: 450px;
+      height: 480px;
       border: none;
       border-radius: 12px;
+      background: #000;
     }
 
     h1 {
-      font-size: 1.5rem;
-      margin-top: 1rem;
+      font-size: 1.8rem;
+      margin-top: 1.5rem;
     }
 
     p {
       opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    .notice {
+      font-size: 0.95rem;
+      color: #ffcc00;
+      background: #333;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
     }
 
     a.back {
       display: inline-block;
       margin-top: 2rem;
-      color: #00f;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    a.back:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <iframe id="player" allowfullscreen></iframe>
+
     <h1 id="title">Loading title...</h1>
     <p id="description">Loading description...</p>
+
+    <div class="notice">⚠️ If the video doesn't load, try reloading the page.</div>
+
     <a href="/" class="back">← Back to homepage</a>
   </div>
 
@@ -55,7 +87,7 @@
     const videoId = params.get("id");
 
     if (!videoId) {
-      document.body.innerHTML = "<h1>Video not found</h1>";
+      document.body.innerHTML = "<h1 style='text-align:center; padding-top: 2rem;'>❌ Video not found</h1>";
     } else {
       document.getElementById("player").src = `https://inv.nadeko.net/embed/${videoId}`;
 
