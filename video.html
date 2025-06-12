@@ -4,8 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Campus Inkrement</title>
-  <link rel="icon" href="icon.png" type="image/png">
+  <title>Watch Video</title>
   <style>
     :root {
       --bg: #111;
@@ -90,7 +89,20 @@
     if (!videoId) {
       document.body.innerHTML = "<h1 style='text-align:center; padding-top: 2rem;'>❌ Video not found</h1>";
     } else {
-      document.getElementById("player").src = `https://inv.nadeko.net/embed/${videoId}`;
+      const renderMethod = localStorage.getItem("renderMethod") || "inv";
+
+      let playerUrl;
+      switch (renderMethod) {
+        case "yt":
+          playerUrl = `https://www.youtube.com/embed/${videoId}`;
+          break;
+        case "inv":
+        default:
+          playerUrl = `https://inv.nadeko.net/embed/${videoId}`;
+          break;
+      }
+
+      document.getElementById("player").src = playerUrl;
 
       fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`)
         .then(res => res.json())
