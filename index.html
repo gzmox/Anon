@@ -316,28 +316,31 @@
       renderVideos(allVideos);
     }
 
-    function renderVideos(videos, reset = true) {
-      const container = document.getElementById("videoGrid");
-      if (reset) container.innerHTML = "";
+function renderVideos(videos, reset = true) {
+  const container = document.getElementById("videoGrid");
+  if (reset) container.innerHTML = "";
 
-      const toDisplay = videos.slice(0, displayCount);
-      toDisplay.forEach(video => {
-        const card = document.createElement("div");
-        card.className = "video-card";
-        card.id = `video-${video.id}`;
-        card.innerHTML = `
-          <div class="video-info">
-            <h3>${video.title}</h3>
-            <p>${video.description}</p>
-            <iframe src="https://inv.nadeko.net/embed/${video.id}" frameborder="0" allowfullscreen></iframe>
-          </div>
-        `;
-        container.appendChild(card);
-      });
+  const toDisplay = videos.slice(0, displayCount);
+  toDisplay.forEach(video => {
+    const card = document.createElement("div");
+    card.className = "video-card";
+    card.id = `video-${video.id}`;
+    card.innerHTML = `
+      <a href="video.html?id=${video.id}" style="text-decoration: none; color: inherit;">
+        <div class="video-info">
+          <h3>${video.title}</h3>
+          <p>${video.description}</p>
+          <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" style="width:100%; border-radius: 8px; margin-top: 0.5rem;">
+        </div>
+      </a>
+    `;
+    container.appendChild(card);
+  });
 
-      const btn = document.getElementById("loadMoreBtn");
-      btn.style.display = displayCount >= videos.length ? "none" : "block";
-    }
+  const btn = document.getElementById("loadMoreBtn");
+  btn.style.display = displayCount >= videos.length ? "none" : "block";
+}
+
 
     function loadMoreVideos() {
       displayCount += 15;
